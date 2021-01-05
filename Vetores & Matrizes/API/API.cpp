@@ -8,6 +8,7 @@ namespace DArray {
 		void* array;
 		size_t size;
 		size_t used;
+		size_t AmountStrings;
 		dataType dataType;
 	};
 
@@ -16,6 +17,7 @@ namespace DArray {
 		a->array = malloc(initSize * sizeof(T));
 		a->used = 0;
 		a->size = initSize;
+		a->AmountStrings = 0;
 		a->dataType = dataType;
 	}
 
@@ -82,6 +84,24 @@ namespace DArray {
 		return ((T*)a->array)[index];
 	}
 
+	char* GetStringByIndex(DArray* a, int index){
+		int CIndex = -1;
+		char* addr;
+		for (size_t i = 0; i < a->size; i++)
+		{
+			if (getElem<char>(a, i) == '\'' || getElem<char>(a, i) == '\"')
+			{
+				CIndex++;
+				if (CIndex == index)
+				{
+					addr = ((char *)a->array + i + 1);
+					break;
+				}
+			}
+		}
+		return addr;
+	}
+
 	void print(DArray* a) {
 		bool stop = false;
 		printf("\n");
@@ -107,13 +127,11 @@ namespace DArray {
 				}
 				break;
 			case 2:
-				if (getElem<char>(a, i) == '\0')
+				for (size_t i = 0; i < a->AmountStrings; i++)
 				{
-					stop = true;
+					printf("%s ", GetStringByIndex(a, i));
 				}
-				else {
-					printf("%c ", getElem<char>(a, i));
-				}
+				stop = true;
 				break;
 			}
 			if (stop)
@@ -121,7 +139,6 @@ namespace DArray {
 				break;
 			}
 		}
-
 	}
 }
 
@@ -141,27 +158,34 @@ unsigned long long power(unsigned int exponent) {
 
 void translate_input(char* input, DArray::DArray* Tinput) {
 	size_t len = 0;
+	size_t length;
 	bool isFloat = false, isString = false;
 	for (size_t i = 0; true; i++)
 	{
 		if (input[i] == '\0' || input[i] == ',')
 		{
 			len += 1;
-			if (input[i] == '\0')
+			if (input[i] == '\0' && isString)
+			{
+				length = i;
+				break;
+			}
+			else if (input[i] == '\0')
 			{
 				++len;
 				break;
 			}
 		}
-		if (input[i] == '\"' || input[i] == '\'') {
+		if ((input[i] == '\"' || input[i] == '\'') && !isString)
+		{
 			isString = true;
 		}
-		if (input[i] == '.' && !isString)
+		if (input[i] == '.' && !isString && !isFloat)
 		{
 			isFloat = true;
 		}
 	}
-	if (isString) {
+	if (isString){
 		DArray::init<char>(Tinput, len, DArray::ch);
 	}
 	else if (isFloat) {
@@ -175,55 +199,83 @@ void translate_input(char* input, DArray::DArray* Tinput) {
 	unsigned int dHouses = 0;
 	long long number = 0;
 	size_t start = 0, digits = 0;
-	for (size_t i = 0; true; i++)
+	if (isString)
 	{
-		if (input[i] == ',' || input[i] == '\0') {
-			number = 0;
-			digits = i - start;
-			for (size_t j = start; j < i; j++)
+		unsigned short times = 0;
+		for (size_t i = 0; true; i++)
+		{
+			if ((input[i] == '\"' || input[i] == '\'') && times % 2 == 0 && i != 0)
 			{
-				if (isFloat && number == 0)
-				{
-					--digits;
-				}
-				if (input[j] == '.')
-				{
-					dHouses = digits;
-				}
-				else {
-					number += ((unsigned short)input[j] - '0') * power(--digits);
-				}
+				DArray::insertElem(Tinput, '\0');
+				times++;
+				Tinput->AmountStrings++;
 			}
-			if (input[i + 1] == ' ')
+			else if ((input[i] == '\"' || input[i] == '\'') && i != 0)
 			{
-				fix = 2;
+				times++;
+				DArray::insertElem(Tinput, input[i]);
+			}
+			else if (input[i] == '\0')
+			{
+				break;
 			}
 			else
 			{
-				fix = 1;
+				DArray::insertElem(Tinput, input[i]);
 			}
-			start = i + fix;
-			if (isFloat)
-			{
-				double Rnumber = (double)number / power(dHouses);
-				insertElem(Tinput, Rnumber);
-			}
-			else {
-				DArray::insertElem(Tinput, number);
-			}
-			if (input[i] == '\0')
-			{
-				if (isFloat)
+		}
+	}
+	else{
+		for (size_t i = 0; true; i++)
+		{
+			if (input[i] == ',' || input[i] == '\0') {
+				number = 0;
+				digits = i - start;
+				for (size_t j = start; j < i; j++)
 				{
-					DArray::insertElem(Tinput, 0.0);
+					if (isFloat && number == 0)
+					{
+						--digits;
+					}
+					if (input[j] == '.')
+					{
+						dHouses = digits;
+					}
+					else {
+						number += ((unsigned short)input[j] - '0') * power(--digits);
+					}
+				}
+				if (input[i + 1] == ' ')
+				{
+					fix = 2;
 				}
 				else
 				{
-					DArray::insertElem(Tinput, 0LL);
+					fix = 1;
 				}
-				break;
-			}
+				start = i + fix;
+				if (isFloat)
+				{
+					double Rnumber = (double)number / power(dHouses);
+					insertElem(Tinput, Rnumber);
+				}
+				else {
+					DArray::insertElem(Tinput, number);
+				}
+				if (input[i] == '\0')
+				{
+					if (isFloat)
+					{
+						DArray::insertElem(Tinput, 0.0);
+					}
+					else
+					{
+						DArray::insertElem(Tinput, 0LL);
+					}
+					break;
+				}
 
+			}
 		}
 	}
 }
