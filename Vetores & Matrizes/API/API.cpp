@@ -3,7 +3,7 @@
 
 namespace DArray { //basically a class disguised as a namespace, i hope it's more C like.
 
-	enum dataType { ll = 0, d, ch };  //Keeps track of the dataType of a already created DArray
+	enum dataType { ll = 0, d, ch, chp, n};  //Keeps track of the dataType of a already created DArray
 
 	struct DArray{
 		void* array;
@@ -20,6 +20,14 @@ namespace DArray { //basically a class disguised as a namespace, i hope it's mor
 		a->size = initSize;
 		a->AmountStrings = 0;
 		a->dataType = dataType;
+	}
+
+	void initArray(DArray* a, size_t initSize){
+		a->array = malloc(initSize * sizeof(DArray));
+		a->used = 0;
+		a->size = initSize;
+		a->AmountStrings = 0;
+		a->dataType = n;
 	}
 
 	//inserElem : insert a element into the DArray and checks if it needs to be resized (3 oveloards for each "Enum dataType").
@@ -78,21 +86,26 @@ namespace DArray { //basically a class disguised as a namespace, i hope it's mor
 
 	//getElem : get a element by index in numeric DArray (2 overloads, one for for loops and oher for typed ints)
 	template <typename T>
-	T getElem(DArray* a, int index) {
+	T getElem(DArray* a, int index){
 		return ((T*)a->array)[index];
 	}
 
 	template <typename T>
-	T getElem(DArray* a, size_t index) {
+	T getElem(DArray* a, size_t index){
 		return ((T*)a->array)[index];
 	}
-
-	char* GetStringByIndex(DArray* a, int index){ //get string by index
+	char* GetStringByIndex(DArray*, int, bool = false);
+	
+	char* GetStringByIndex(DArray* a, int index, bool fix){ //get string by index
 		int CIndex = -1;
+		if (fix)
+		{
+			CIndex = 0;
+		}
 		char* addr;
 		for (size_t i = 0; i < a->size; i++)
 		{
-			if (getElem<char>(a, i) == '\'' || getElem<char>(a, i) == '\"')
+			if ((getElem<char>(a, i) == '\'' || getElem<char>(a, i) == '\"') && !fix)
 			{
 				CIndex++;
 				if (CIndex == index)
@@ -101,11 +114,25 @@ namespace DArray { //basically a class disguised as a namespace, i hope it's mor
 					break;
 				}
 			}
+			else if (index == 0)
+			{
+				addr = ((char *)a->array + i);
+				break;
+			}
+			else if (getElem<char>(a,i) == '\0' && fix)
+			{
+				addr = ((char *)a->array + i + 1);
+				break;
+			}
 		}
 		return addr;
 	}
 
-	void print(DArray* a) { // print all elements in the DArray, it automatically handles the dataType
+	char* getEAString(DArray* a, int col){
+		return GetStringByIndex(a, col);
+	}
+
+	void print(DArray* a, bool newline) { // print all elements in the DArray, it automatically handles the dataType
 		bool stop = false;
 		printf("\n");
 		for (int i = 0; i < a->used; i++)
@@ -129,13 +156,19 @@ namespace DArray { //basically a class disguised as a namespace, i hope it's mor
 					printf("%.4f ", getElem<double>(a, i));
 				}
 				break;
-			case 2:
+			default:
 				for (size_t i = 0; i < a->AmountStrings; i++)
 				{
-					printf("%s ", GetStringByIndex(a, i));
+					if (newline)
+					{
+						printf("%s\n", GetStringByIndex(a, i));
+					}
+					else
+					{
+						printf("%s ", GetStringByIndex(a, i));
+					}
 				}
 				stop = true;
-				break;
 			}
 			if (stop)
 			{
@@ -207,13 +240,13 @@ void translate_input(char* input, DArray::DArray* Tinput) { // Transform the inp
 		unsigned short times = 0;
 		for (size_t i = 0; true; i++)
 		{
-			if ((input[i] == '\"' || input[i] == '\'') && times % 2 == 0 && i != 0)
+			if ((input[i] == '\"' || input[i] == '\'') && times % 2 != 0)
 			{
 				DArray::insertElem(Tinput, '\0');
 				times++;
 				Tinput->AmountStrings++;
 			}
-			else if ((input[i] == '\"' || input[i] == '\'') && i != 0)
+			else if ((input[i] == '\"' || input[i] == '\''))
 			{
 				times++;
 				DArray::insertElem(Tinput, input[i]);
@@ -277,6 +310,47 @@ void translate_input(char* input, DArray::DArray* Tinput) { // Transform the inp
 				}
 
 			}
+		}
+	}
+}
+
+int handle_input(DArray::DArray* rows, char* row, int size, int currentIndex){ 
+	/*
+	return a negative value if the input routine was interrupted by user.
+	return = -1: input was a string
+	return = -2: input was numerical
+	*/
+	bool isNumber = false;
+	if (currentIndex == 0)
+	{
+		DArray::init<char>(rows, size, DArray::chp);
+	}
+	if (row[0] != '\"' && row[0] != '\'')
+	{
+		DArray::insertElem(rows, '\"');
+		isNumber = true;
+	}
+	for (size_t i = 0; true; i++)
+	{
+		if(row[i] == ';')
+		{
+			DArray::insertElem(rows, '\0');
+			rows->AmountStrings++;
+			if (isNumber)
+			{
+				return -2;
+			}
+			return -1;
+		}
+		else if (row[i] == '\0')
+		{
+			DArray::insertElem(rows, '\0');
+			rows->AmountStrings++;
+			return ++i;
+		}
+		else
+		{
+			DArray::insertElem(rows, row[i]);
 		}
 	}
 }
