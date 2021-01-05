@@ -233,13 +233,11 @@ void translate_input(char* input, DArray::DArray* Tinput) {
 				digits = i - start;
 				for (size_t j = start; j < i; j++)
 				{
-					if (isFloat && number == 0)
-					{
-						--digits;
-					}
 					if (input[j] == '.')
 					{
+						digits--;
 						dHouses = digits;
+						number /= 10;
 					}
 					else {
 						number += ((unsigned short)input[j] - '0') * power(--digits);
