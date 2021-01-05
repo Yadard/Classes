@@ -22,6 +22,7 @@ namespace DArray { //basically a class disguised as a namespace, i hope it's mor
 		a->dataType = dataType;
 	}
 
+	//inserElem : insert a element into the DArray and checks if it needs to be resized (3 oveloards for each "Enum dataType").
 	void insertElem(DArray* a, long long element) { 
 		if (a->used == a->size) {
 			a->size *= 2;
@@ -75,8 +76,9 @@ namespace DArray { //basically a class disguised as a namespace, i hope it's mor
 		a->used = a->size = 0;
 	}
 
+	//getElem : get a element by index in numeric DArray (2 overloads, one for for loops and oher for typed ints)
 	template <typename T>
-	T getElem(DArray* a, int index) { //getelement in a numeric DArray
+	T getElem(DArray* a, int index) {
 		return ((T*)a->array)[index];
 	}
 
