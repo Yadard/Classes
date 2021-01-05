@@ -1,8 +1,9 @@
 #include <cstdio>
 #include <cstdlib>
 
-namespace DArray {
-	enum dataType { ll = 0, d, ch };
+namespace DArray { //basically a class disguised as a namespace, i hope it's more C like.
+
+	enum dataType { ll = 0, d, ch };  //Keeps track of the dataType of a already created DArray
 
 	struct DArray{
 		void* array;
@@ -13,7 +14,7 @@ namespace DArray {
 	};
 
 	template <typename T>
-	void init(DArray* a, size_t initSize, dataType dataType){
+	void init(DArray* a, size_t initSize, dataType dataType){ //alocate memory for the chosen datatype
 		a->array = malloc(initSize * sizeof(T));
 		a->used = 0;
 		a->size = initSize;
@@ -21,7 +22,7 @@ namespace DArray {
 		a->dataType = dataType;
 	}
 
-	void insertElem(DArray* a, long long element) {
+	void insertElem(DArray* a, long long element) { 
 		if (a->used == a->size) {
 			a->size *= 2;
 			if (a->dataType == ll) {
@@ -68,14 +69,14 @@ namespace DArray {
 		((char*)a->array)[a->used++] = element;
 	}
 
-	void del(DArray* a){
+	void del(DArray* a){  //free the memory allocated
 		free(a->array);
 		a->array = NULL;
 		a->used = a->size = 0;
 	}
 
 	template <typename T>
-	T getElem(DArray* a, int index) {
+	T getElem(DArray* a, int index) { //getelement in a numeric DArray
 		return ((T*)a->array)[index];
 	}
 
@@ -84,7 +85,7 @@ namespace DArray {
 		return ((T*)a->array)[index];
 	}
 
-	char* GetStringByIndex(DArray* a, int index){
+	char* GetStringByIndex(DArray* a, int index){ //get string by index
 		int CIndex = -1;
 		char* addr;
 		for (size_t i = 0; i < a->size; i++)
@@ -102,7 +103,7 @@ namespace DArray {
 		return addr;
 	}
 
-	void print(DArray* a) {
+	void print(DArray* a) { // print all elements in the DArray, it automatically handles the dataType
 		bool stop = false;
 		printf("\n");
 		for (int i = 0; i < a->used; i++)
@@ -142,7 +143,7 @@ namespace DArray {
 	}
 }
 
-unsigned long long power(unsigned int exponent) {
+unsigned long long power(unsigned int exponent) { //I made it because the <math.h> one was acting strange
 	if (exponent == 0) {
 		return 1;
 	}
@@ -156,7 +157,7 @@ unsigned long long power(unsigned int exponent) {
 	}
 }
 
-void translate_input(char* input, DArray::DArray* Tinput) {
+void translate_input(char* input, DArray::DArray* Tinput) { // Transform the input - String - into a DArray with appropriate dataType
 	size_t len = 0;
 	size_t length;
 	bool isFloat = false, isString = false;
