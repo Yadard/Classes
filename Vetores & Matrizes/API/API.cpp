@@ -78,6 +78,25 @@ namespace DArray { //basically a class disguised as a namespace, i hope it's mor
 		((char*)a->array)[a->used++] = element;
 	}
 
+	void insertElem(DArray* a, DArray element) {
+		/*
+		Overload to insert a DArray into a DArray, it works fine but i suspect that it's copying, thus it's slower than the pointer method,
+		but it's a lot more clean and makes possible the usage of the DArray.used variable.
+		*/
+		if (a->used == a->size) {
+			a->size *= 2;
+			if (a->dataType == n)
+			{
+				a->array = realloc(a->array, a->size);
+			}
+			else
+			{
+				throw "Error: Data type mismatch!";
+			}
+		}
+		((DArray *)a->array)[a->used++] = element;
+	}
+
 	void del(DArray* a){  //free the memory allocated
 		free(a->array);
 		a->array = NULL;
@@ -94,6 +113,7 @@ namespace DArray { //basically a class disguised as a namespace, i hope it's mor
 	T getElem(DArray* a, size_t index){
 		return ((T*)a->array)[index];
 	}
+
 	char* GetStringByIndex(DArray*, int, bool = false);
 	
 	char* GetStringByIndex(DArray* a, int index, bool fix){ //get string by index
@@ -173,6 +193,160 @@ namespace DArray { //basically a class disguised as a namespace, i hope it's mor
 			if (stop)
 			{
 				break;
+			}
+		}
+	}
+
+	unsigned int getAmountDigits(int number){
+		unsigned int digitsAmount = 1;
+		if (number < 10)
+		{
+			return digitsAmount;
+		}
+		while(true)
+		{
+			number /= 10;
+			digitsAmount++;
+			if (number < 10)
+			{
+				return digitsAmount;
+			}
+		}
+	}
+
+	unsigned int getLenString(char *string){
+		for (size_t i = 0; true; i++)
+		{
+			if (string[i] == '\0')
+			{
+				return i;
+			}
+		}
+    
+	}
+
+	template <typename T>
+	T getElemArray(DArray* a, size_t row, size_t col){ //get a elemente from a 2D array, especiafy the datatype of the element in the template
+		return getElem<T>(&((DArray*)a->array)[row], col);
+	}
+
+	void printTableLL(DArray* a, size_t rows, size_t cols){
+		/*
+		GOAL: make a function that prints a 2D array in a table format;
+
+		REQUIREMENTS:
+		- Support for the 3 main types: string, long long, double;
+		- Make this function handle all the possibles dataTypes;
+
+		LOG:
+		-> Working fine with long long data types;
+		
+		TODO:
+		-> Take a look at the index formation (line 276), sees if it's gonna work fine;
+		-> Implement support for doubles and strings;
+		*/
+		unsigned int digitsAmount, IndexDA = 0;
+		int max = 0;
+		bool topMargin = true;
+		for (size_t i = 0; i < rows; i++)
+		{
+			for (size_t j = 0; j < cols; j++)
+			{
+				if (getElemArray<long long>(a, i, j) > max)
+				{
+					max = getElemArray<long long>(a, i, j);
+				}
+			}
+		}
+		if (rows > max)
+		{
+			digitsAmount = getAmountDigits(rows);
+		}
+		else if (cols > max)
+		{
+			digitsAmount = getAmountDigits(cols);
+		}
+		else
+		{
+			digitsAmount = getAmountDigits(max);
+		}
+		printf("digits = %d\n", digitsAmount);
+		printf("your array:\n\n");
+		for (int i = 0; i < rows; i++)
+		{
+			if (topMargin)
+			{
+				printf(" ");
+				for (size_t l = 0; l < cols; l++)
+				{
+					if (l == 0)
+					{
+						for (size_t k = 0; k < digitsAmount; k++)
+						{
+							printf(" ");
+						}
+						printf("%c", 179);
+					}
+					if (IndexDA > digitsAmount)
+					{
+						for (size_t k = 0; k < IndexDA-getAmountDigits(l); k++)
+						{
+							printf(" ");
+						}
+					}
+					else
+					{
+						for (size_t k = 0; k < digitsAmount-getAmountDigits(l); k++)
+						{
+							printf(" ");
+						}
+					}
+					printf("%d%c", l,  179);
+				}
+				printf("\n");
+				printf(" ");
+				for (size_t i = 0; i < cols + 1; i++)
+				{
+					for (size_t n = 0; n < digitsAmount; n++)
+					{
+						printf("%c", 196);
+					}
+					printf("%c", 179); //|
+				}
+				topMargin = false;
+			}
+			for (int j = 0; j < cols; j++)
+			{
+				if (j == 0)
+				{
+					printf("\n");
+					printf(" ");
+					printf("%d", i); //j |
+					for (size_t m = 0; m < digitsAmount-1; m++)
+					{
+						printf(" ");
+					}
+					printf("%c", 179);
+				}
+				for (size_t b = 0; b < digitsAmount-getAmountDigits(getElemArray<long long>(a, i, j)); b++)
+				{
+					printf(" ");
+				}
+				printf("%d", getElemArray<long long>(a, i, j));
+				printf("%c", 179);
+				if (j == cols-1)
+				{
+					printf("\n");
+					printf(" ");
+					for (size_t i = 0; i < cols + 1; i++)
+					{
+						for (size_t l = 0; l < digitsAmount; l++)
+						{
+							printf("%c", 196);
+						}
+						printf("%c", 179);
+					}
+				}
 			}
 		}
 	}
@@ -353,4 +527,31 @@ int handle_input(DArray::DArray* rows, char* row, int size, int currentIndex){
 			DArray::insertElem(rows, row[i]);
 		}
 	}
+}
+
+int main(){ 
+	/*
+	testing printTable...
+	GOAL:
+	* THE SAME AS THE PRINTTABLE;
+
+	LOG:
+	-> the insertElem method looks more clean and make possible the usage of the DArray.used var;
+	-> Although I suspect that this method is copying, thus it's slower, I think it stills worth it;
+	*/
+	DArray::DArray test;
+	DArray::init<DArray::DArray>(&test, 10u, DArray::n);
+	for (size_t i = 0; i < test.size; i++)
+	{
+		DArray::DArray ll;
+		DArray::init<long long>(&ll, 12u, DArray::ll);
+		for (size_t l = 0; l < ll.size; l++)
+		{
+			DArray::insertElem(&ll, (long long) (rand() %10));
+		}
+		DArray::DArray* ptr = &((DArray::DArray*)test.array)[i];
+		DArray::insertElem(&test, ll);
+		printf(";");
+	}
+	DArray::printTableLL(&test, test.used, DArray::getElem<DArray::DArray>(&test, 0).used);
 }
