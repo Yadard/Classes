@@ -13,8 +13,8 @@ namespace DArray {
 	void del(DArray*);
 	void init(DArray*, size_t, dataType);
 	template <typename T>
-	T getElemArray(DArray* a, int col);
-	char* getEAString(DArray* a, int col);
+	T getElemArray(DArray*, size_t, size_t);
+	char* getEAString(DArray*, int);
 	void initArray(DArray*, size_t);
 	template <typename T>
 	T getElem(DArray*, int);
@@ -25,8 +25,13 @@ namespace DArray {
 	void insertElem(DArray*, char);
 	char* GetStringByIndex(DArray*, int, bool = false);
 	void print(DArray*, bool = false);
+	unsigned int getAmountDigits(int);
+	unsigned int getLenString(char *);
+	void printTableNumber(DArray*, size_t, size_t);
+	void printTableStrings(DArray*, size_t, size_t);
 };
 
 void translate_input(char* input, DArray::DArray* Tinput);
 unsigned long long power(unsigned int exponent);
-int handle_input(DArray::DArray*, char*, int, int = 0);
+int handle_input(DArray::DArray*, char*, int, bool*, int = 0);
+void handlePrint(DArray::DArray*, bool = false);

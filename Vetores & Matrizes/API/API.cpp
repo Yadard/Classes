@@ -230,31 +230,36 @@ namespace DArray { //basically a class disguised as a namespace, i hope it's mor
 		return getElem<T>(&((DArray*)a->array)[row], col);
 	}
 
-	void printTableLL(DArray* a, size_t rows, size_t cols){
+	void printTableNumber(DArray* a, size_t rows, size_t cols){
 		/*
-		GOAL: make a function that prints a 2D array in a table format;
-
-		REQUIREMENTS:
-		- Support for the 3 main types: string, long long, double;
-		- Make this function handle all the possibles dataTypes;
-
+		This function takes a DArray of DArrays and make a table with the
+		values within the 2D DArrays, it only works with long long and double;
+		
 		LOG:
 		-> Working fine with long long data types;
-		
-		TODO:
-		-> Take a look at the index formation (line 276), sees if it's gonna work fine;
-		-> Implement support for doubles and strings;
+		-> It's gonna be a mess if I somehow manage to make it work it strings;
+		-> So I'll make a another function to handle string tables;
 		*/
 		unsigned int digitsAmount, IndexDA = 0;
 		int max = 0;
-		bool topMargin = true;
+		bool topMargin = true, isDouble = false;
 		for (size_t i = 0; i < rows; i++)
 		{
 			for (size_t j = 0; j < cols; j++)
 			{
-				if (getElemArray<long long>(a, i, j) > max)
+				if (((DArray*)a->array)->dataType == ll)
 				{
-					max = getElemArray<long long>(a, i, j);
+					if (getElemArray<long long>(a, i, j) > max)
+					{
+						max = getElemArray<long long>(a, i, j);
+					}
+				}
+				else
+				{
+					if (getElemArray<double>(a, i, j) > max)
+					{
+						max = getElemArray<double>(a, i, j);
+					}	
 				}
 			}
 		}
@@ -270,6 +275,12 @@ namespace DArray { //basically a class disguised as a namespace, i hope it's mor
 		{
 			digitsAmount = getAmountDigits(max);
 		}
+		IndexDA = digitsAmount;
+		if (getElem<DArray>(a, 0).dataType == d)
+		{
+			digitsAmount += 3;
+			isDouble = true;
+		}
 		printf("digits = %d\n", digitsAmount);
 		printf("your array:\n\n");
 		for (int i = 0; i < rows; i++)
@@ -281,25 +292,15 @@ namespace DArray { //basically a class disguised as a namespace, i hope it's mor
 				{
 					if (l == 0)
 					{
-						for (size_t k = 0; k < digitsAmount; k++)
+						for (size_t k = 0; k < IndexDA; k++)
 						{
 							printf(" ");
 						}
 						printf("%c", 179);
 					}
-					if (IndexDA > digitsAmount)
+					for (size_t k = 0; k < digitsAmount-getAmountDigits(l); k++)
 					{
-						for (size_t k = 0; k < IndexDA-getAmountDigits(l); k++)
-						{
-							printf(" ");
-						}
-					}
-					else
-					{
-						for (size_t k = 0; k < digitsAmount-getAmountDigits(l); k++)
-						{
-							printf(" ");
-						}
+						printf(" ");
 					}
 					printf("%d%c", l,  179);
 				}
@@ -309,6 +310,10 @@ namespace DArray { //basically a class disguised as a namespace, i hope it's mor
 				{
 					for (size_t n = 0; n < digitsAmount; n++)
 					{
+						if (i == 0 && n == 0 && isDouble)
+						{
+							n = digitsAmount - IndexDA;
+						}
 						printf("%c", 196);
 					}
 					printf("%c", 179); //|
@@ -322,17 +327,34 @@ namespace DArray { //basically a class disguised as a namespace, i hope it's mor
 					printf("\n");
 					printf(" ");
 					printf("%d", i); //j |
-					for (size_t m = 0; m < digitsAmount-1; m++)
+					for (size_t m = 0; m < IndexDA - 1; m++)
 					{
 						printf(" ");
 					}
 					printf("%c", 179);
 				}
-				for (size_t b = 0; b < digitsAmount-getAmountDigits(getElemArray<long long>(a, i, j)); b++)
+				if (isDouble)
 				{
-					printf(" ");
+					for (size_t b = 3; b < digitsAmount-getAmountDigits(getElemArray<double>(a, i, j)); b++)
+					{
+						printf(" ");
+					}
 				}
-				printf("%d", getElemArray<long long>(a, i, j));
+				else
+				{
+					for (size_t b = 0; b < digitsAmount-getAmountDigits(getElemArray<long long>(a, i, j)); b++)
+					{
+						printf(" ");
+					}
+				}
+				if (isDouble)
+				{
+					printf("%.2f", getElemArray<double>(a, i, j));
+				}
+				else
+				{
+					printf("%d", getElemArray<long long>(a, i, j));
+				}
 				printf("%c", 179);
 				if (j == cols-1)
 				{
@@ -342,6 +364,142 @@ namespace DArray { //basically a class disguised as a namespace, i hope it's mor
 					{
 						for (size_t l = 0; l < digitsAmount; l++)
 						{
+							if (i == 0 && isDouble && l == 0)
+							{
+								l = digitsAmount - IndexDA;
+							}
+							printf("%c", 196);
+						}
+						printf("%c", 179);
+					}
+				}
+			}
+		}
+	}
+	
+	void printTableStrings(DArray* a, size_t rows, size_t cols){
+		/*
+		Working fine;
+		*/
+		int digitsAmount = 0, IndexDA;
+		unsigned int paddingLeft, paddingRight;
+		bool topMargin = true;
+		for (size_t i = 0; i < rows; i++)
+		{
+			for (size_t j = 0; j < cols; j++)
+			{
+				if (getLenString(GetStringByIndex(&((DArray*)a->array)[i], j)) > digitsAmount)
+				{
+					digitsAmount = getLenString(GetStringByIndex(&((DArray*)a->array)[i], j));
+				}
+			}
+		}
+		digitsAmount += 4;
+		if (rows > cols)
+		{
+			IndexDA = getAmountDigits(rows) + 1;
+		}
+		else
+		{
+			IndexDA = getAmountDigits(cols) + 1;
+		}
+		for (int i = 0; i < rows; i++)
+		{
+			if (topMargin)
+			{
+				printf(" ");
+				for (size_t l = 0; l < cols; l++)
+				{
+					if (l == 0)
+					{
+						for (size_t k = 0; k < IndexDA; k++)
+						{
+							printf(" ");
+						}
+						printf("%c", 179);
+					}
+					if ((digitsAmount-getAmountDigits(l)) % 2 == 0)
+					{
+						paddingLeft = (digitsAmount-getAmountDigits(l))/2;
+						paddingRight = (digitsAmount - getAmountDigits(l)) - paddingLeft;
+					}
+					else
+					{
+						paddingLeft = (digitsAmount-getAmountDigits(l))/2;
+						paddingRight = (digitsAmount - getAmountDigits(l)) - paddingLeft - 1;
+					}
+					for (size_t k = 0; k < paddingLeft; k++)
+					{
+						printf(" ");
+					}
+					printf("%d", l);
+					for (size_t b = 0; b < paddingRight; b++)
+					{
+						printf(" ");
+					}
+					printf("%c", 179);
+				}
+				printf("\n");
+				printf(" ");
+				for (size_t i = 0; i < cols + 1; i++)
+				{
+					for (size_t n = 0; n < digitsAmount; n++)
+					{
+						if (i == 0 && n == 0)
+						{
+							n = digitsAmount - IndexDA;
+						}
+						printf("%c", 196);
+					}
+					printf("%c", 179); //|
+				}
+				topMargin = false;
+			}
+			for (int j = 0; j < cols; j++)
+			{
+				if (j == 0)
+				{
+					printf("\n");
+					printf(" ");
+					printf("%d", i); //j |
+					for (size_t m = 0; m < IndexDA - 1; m++)
+					{
+						printf(" ");
+					}
+					printf("%c", 179);
+				}
+				if ((digitsAmount-getLenString(GetStringByIndex(&((DArray*)a->array)[i], j))) % 2 == 0)
+				{
+					paddingLeft = (digitsAmount-getLenString(GetStringByIndex(&((DArray*)a->array)[i], j)) - 2)/2;
+					paddingRight = paddingLeft;
+				}
+				else
+				{
+					paddingLeft = (digitsAmount-getLenString(GetStringByIndex(&((DArray*)a->array)[i], j)) - 2)/2;
+					paddingRight = (digitsAmount-getLenString(GetStringByIndex(&((DArray*)a->array)[i], j)) - 1)/2;
+				}
+				for (size_t b = 0; b < paddingLeft; b++)
+				{
+					printf(" ");
+				}
+				printf("\"%s\"", GetStringByIndex(&((DArray*)a->array)[i], j));
+				for (size_t p = 0; p < paddingRight; p++)
+				{
+					printf(" ");
+				}
+				printf("%c", 179);
+				if (j == cols-1)
+				{
+					printf("\n");
+					printf(" ");
+					for (size_t i = 0; i < cols + 1; i++)
+					{
+						for (size_t l = 0; l < digitsAmount; l++)
+						{
+							if (i == 0 && l == 0)
+							{
+								l = digitsAmount - IndexDA;
+							}
 							printf("%c", 196);
 						}
 						printf("%c", 179);
@@ -366,7 +524,9 @@ unsigned long long power(unsigned int exponent) { //I made it because the <math.
 	}
 }
 
-void translate_input(char* input, DArray::DArray* Tinput) { // Transform the input - String - into a DArray with appropriate dataType
+void translate_input(char* input, DArray::DArray* a){ // Transform the input - String - into a DArray with appropriate dataType
+	DArray::DArray foo;
+	DArray::DArray* Tinput = &foo;
 	size_t len = 0;
 	size_t length;
 	bool isFloat = false, isString = false;
@@ -486,9 +646,10 @@ void translate_input(char* input, DArray::DArray* Tinput) { // Transform the inp
 			}
 		}
 	}
+	DArray::insertElem(a, *Tinput);
 }
 
-int handle_input(DArray::DArray* rows, char* row, int size, int currentIndex){ 
+int handle_input(DArray::DArray* rows, char* row, int size, bool* IsNumber, int currentIndex){ 
 	/*
 	return a negative value if the input routine was interrupted by user.
 	return = -1: input was a string
@@ -520,6 +681,7 @@ int handle_input(DArray::DArray* rows, char* row, int size, int currentIndex){
 		{
 			DArray::insertElem(rows, '\0');
 			rows->AmountStrings++;
+			*IsNumber = isNumber;
 			return ++i;
 		}
 		else
@@ -529,29 +691,15 @@ int handle_input(DArray::DArray* rows, char* row, int size, int currentIndex){
 	}
 }
 
-int main(){ 
-	/*
-	testing printTable...
-	GOAL:
-	* THE SAME AS THE PRINTTABLE;
-
-	LOG:
-	-> the insertElem method looks more clean and make possible the usage of the DArray.used var;
-	-> Although I suspect that this method is copying, thus it's slower, I think it stills worth it;
-	*/
-	DArray::DArray test;
-	DArray::init<DArray::DArray>(&test, 10u, DArray::n);
-	for (size_t i = 0; i < test.size; i++)
+void handlePrint(DArray::DArray* a, bool table){
+	DArray::DArray* ptr = &((DArray::DArray*)a->array)[0];
+	switch (ptr->dataType)
 	{
-		DArray::DArray ll;
-		DArray::init<long long>(&ll, 12u, DArray::ll);
-		for (size_t l = 0; l < ll.size; l++)
-		{
-			DArray::insertElem(&ll, (long long) (rand() %10));
-		}
-		DArray::DArray* ptr = &((DArray::DArray*)test.array)[i];
-		DArray::insertElem(&test, ll);
-		printf(";");
+	case DArray::ch:
+		DArray::printTableStrings(a, a->used, ptr->AmountStrings);
+		break;
+	default:
+		DArray::printTableNumber(a, a->used, ptr->used-1);
+		break;
 	}
-	DArray::printTableLL(&test, test.used, DArray::getElem<DArray::DArray>(&test, 0).used);
 }
